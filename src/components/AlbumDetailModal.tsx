@@ -3,14 +3,16 @@
 import React, { useEffect, useState } from "react";
 import { AlbumWithReview, Track } from "@/lib/types";
 import { RatingStars } from "./RatingStars";
-import { X, Heart, Calendar, Disc, Edit3 } from "lucide-react";
+import { X, Heart, Calendar, Disc, Edit3, ListPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { TracklistEditorModal } from "./TracklistEditorModal";
 
 interface AlbumDetailModalProps {
   album: AlbumWithReview | null;
   isOpen: boolean;
   onClose: () => void;
   onOpenRate: (album: AlbumWithReview) => void;
+  onAlbumUpdated?: (updatedAlbum: AlbumWithReview) => void;
   isAuthenticated?: boolean;
 }
 
@@ -19,10 +21,12 @@ export function AlbumDetailModal({
   isOpen,
   onClose,
   onOpenRate,
+  onAlbumUpdated,
   isAuthenticated = false,
 }: AlbumDetailModalProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoadingTracks, setIsLoadingTracks] = useState<boolean>(false);
+  const [isTrackEditorOpen, setIsTrackEditorOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (!album) return;
@@ -57,6 +61,8 @@ export function AlbumDetailModal({
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
+
+  const effectiveTrackCount = tracks.length > 0 ? tracks.length : album.track_count;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
@@ -109,10 +115,10 @@ export function AlbumDetailModal({
 
                 <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-text-muted">
                   {album.release_year && <span>{album.release_year}</span>}
-                  {album.track_count > 0 && (
+                  {effectiveTrackCount > 0 && (
                     <>
                       <span>·</span>
-                      <span>{album.track_count} tracks</span>
+                      <span>{effectiveTrackCount} tracks</span>
                     </>
                   )}
                 </div>
@@ -211,9 +217,21 @@ export function AlbumDetailModal({
 
           {/* Tracklist Section */}
           <div>
-            <h3 className="text-xs font-medium text-text-secondary mb-2.5">
-              Tracklist
-            </h3>
+            <div className="flex items-center justify-between mb-2.5">
+              <h3 className="text-xs font-medium text-text-secondary">
+                Tracklist {tracks.length > 0 && `(${tracks.length})`}
+              </h3>
+              {isAuthenticated && (
+                <button
+                  type="button"
+                  onClick={() => setIsTrackEditorOpen(true)}
+                  className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                >
+                  <ListPlus className="w-3.5 h-3.5" />
+                  <span>{tracks.length > 0 ? "Edit tracklist" : "Add tracklist"}</span>
+                </button>
+              )}
+            </div>
 
             {isLoadingTracks ? (
               <div className="py-3 text-center text-xs text-text-muted">
@@ -258,6 +276,18 @@ export function AlbumDetailModal({
                   );
                 })}
               </div>
+            ) : isAuthenticated ? (
+              <div className="p-4 rounded border border-dashed border-border/60 text-center text-xs text-text-muted space-y-2">
+                <p>No tracks listed yet.</p>
+                <button
+                  type="button"
+                  onClick={() => setIsTrackEditorOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface border border-border text-xs text-text-primary hover:bg-surface-raised transition-colors cursor-pointer"
+                >
+                  <ListPlus className="w-3.5 h-3.5" />
+                  <span>Add tracklist</span>
+                </button>
+              </div>
             ) : (
               <div className="p-3 rounded border border-border/40 text-center text-xs text-text-muted">
                 No tracks listed.
@@ -266,6 +296,22 @@ export function AlbumDetailModal({
           </div>
         </div>
       </div>
+
+      {/* Tracklist Editor Modal */}
+      <TracklistEditorModal
+        album={album}
+        isOpen={isTrackEditorOpen}
+        onClose={() => setIsTrackEditorOpen(false)}
+        onTracksSaved={(newTracks, newCount) => {
+          setTracks(newTracks);
+          if (onAlbumUpdated && album) {
+            onAlbumUpdated({
+              ...album,
+              track_count: newCount,
+            });
+          }
+        }}
+      />
     </div>
   );
 }

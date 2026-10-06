@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Album } from "@/lib/types";
 import { X, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { parseTracklistText } from "@/lib/trackParser";
 
 interface AddAlbumModalProps {
   isOpen: boolean;
@@ -18,10 +19,31 @@ export function AddAlbumModal({ isOpen, onClose, onAdded }: AddAlbumModalProps) 
   const [coverUrl, setCoverUrl] = useState("");
   const [genres, setGenres] = useState("");
   const [trackCount, setTrackCount] = useState<string>("10");
+  const [tracklistRaw, setTracklistRaw] = useState("");
+  const [showTracklistInput, setShowTracklistInput] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
+
+  const handleTracklistChange = (text: string) => {
+    setTracklistRaw(text);
+    const parsed = parseTracklistText(text);
+    if (parsed.length > 0) {
+      setTrackCount(parsed.length.toString());
+    }
+  };
+
+  const handleClose = () => {
+    setTitle("");
+    setArtist("");
+    setCoverUrl("");
+    setGenres("");
+    setTracklistRaw("");
+    setShowTracklistInput(false);
+    setErrorMsg(null);
+    onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +60,14 @@ export function AddAlbumModal({ isOpen, onClose, onAdded }: AddAlbumModalProps) 
       .map((g) => g.trim())
       .filter((g) => g.length > 0);
 
+    const parsedTracks = parseTracklistText(tracklistRaw);
+    const effectiveTrackCount =
+      parsedTracks.length > 0
+        ? parsedTracks.length
+        : trackCount
+        ? parseInt(trackCount, 10)
+        : 0;
+
     const supabase = createClient();
     try {
       const { data, error } = await supabase
@@ -48,19 +78,33 @@ export function AddAlbumModal({ isOpen, onClose, onAdded }: AddAlbumModalProps) 
           release_year: releaseYear ? parseInt(releaseYear, 10) : null,
           cover_url: coverUrl.trim() || null,
           genres: genreList,
-          track_count: trackCount ? parseInt(trackCount, 10) : 0,
+          track_count: effectiveTrackCount,
         })
         .select()
         .single();
 
       if (error) throw error;
 
+      // If tracks were provided, insert them linked to the new album
+      if (parsedTracks.length > 0 && data?.id) {
+        const trackRows = parsedTracks.map((t) => ({
+          album_id: data.id,
+          track_number: t.track_number,
+          title: t.title,
+          duration_seconds: t.duration_seconds,
+        }));
+
+        const { error: tracksErr } = await supabase
+          .from("tracks")
+          .insert(trackRows);
+
+        if (tracksErr) {
+          console.error("Warning: album created but tracks failed to insert:", tracksErr);
+        }
+      }
+
       onAdded(data as Album);
-      onClose();
-      setTitle("");
-      setArtist("");
-      setCoverUrl("");
-      setGenres("");
+      handleClose();
     } catch (err: unknown) {
       console.error("Failed to add album:", err);
       const msg = err instanceof Error ? err.message : "Failed to add album";
@@ -72,14 +116,14 @@ export function AddAlbumModal({ isOpen, onClose, onAdded }: AddAlbumModalProps) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="relative w-full max-w-sm rounded-lg bg-surface border border-border shadow-2xl overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-md rounded-lg bg-surface border border-border shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60">
           <h2 className="text-xs font-semibold text-text-primary">
             Add Release
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
@@ -176,10 +220,43 @@ export function AddAlbumModal({ isOpen, onClose, onAdded }: AddAlbumModalProps) 
             />
           </div>
 
+          {/* Tracklist bulk input toggle */}
+          <div className="pt-1 border-t border-border/40">
+            <div className="flex items-center justify-between mb-1.5">
+              <button
+                type="button"
+                onClick={() => setShowTracklistInput((prev) => !prev)}
+                className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+              >
+                <span>{showTracklistInput ? "Hide tracklist input" : "+ Paste tracklist (optional)"}</span>
+              </button>
+              {parseTracklistText(tracklistRaw).length > 0 && (
+                <span className="px-1.5 py-0.5 rounded bg-surface-raised border border-border/60 text-[10px] text-text-secondary">
+                  {parseTracklistText(tracklistRaw).length} tracks detected
+                </span>
+              )}
+            </div>
+
+            {showTracklistInput && (
+              <div className="space-y-1.5 mt-2">
+                <textarea
+                  rows={4}
+                  placeholder={"1. Dark Fantasy 4:40\n2. Gorgeous 5:57\n3. POWER"}
+                  value={tracklistRaw}
+                  onChange={(e) => handleTracklistChange(e.target.value)}
+                  className="w-full p-2.5 rounded bg-canvas/70 border border-border text-xs font-mono text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-border-subtle"
+                />
+                <p className="text-[11px] text-text-muted">
+                  Paste tracklist lines. Auto-syncs track count and adds tracks to release.
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="pt-3 flex items-center justify-end gap-2 border-t border-border/50">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isSubmitting}
               className="px-3 py-1.5 text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer"
             >

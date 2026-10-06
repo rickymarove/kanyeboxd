@@ -141,6 +141,15 @@ export function CrateShelfView({
     setAlbums((prev) => [newAlbum, ...prev]);
   };
 
+  const handleAlbumUpdated = (updatedAlbum: AlbumWithReview) => {
+    setAlbums((prev) =>
+      prev.map((a) => (a.id === updatedAlbum.id ? { ...a, ...updatedAlbum } : a))
+    );
+    if (selectedAlbumForDetail && selectedAlbumForDetail.id === updatedAlbum.id) {
+      setSelectedAlbumForDetail((prev) => (prev ? { ...prev, ...updatedAlbum } : null));
+    }
+  };
+
   const isAuthenticated = !!user;
 
   return (
@@ -249,6 +258,7 @@ export function CrateShelfView({
         isOpen={!!selectedAlbumForDetail}
         onClose={() => setSelectedAlbumForDetail(null)}
         onOpenRate={(item) => setSelectedAlbumForRate(item)}
+        onAlbumUpdated={handleAlbumUpdated}
         isAuthenticated={isAuthenticated}
       />
 
