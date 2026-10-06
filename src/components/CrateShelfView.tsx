@@ -1,28 +1,34 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Album, AlbumWithReview, Review, UserStats } from "@/lib/types";
 import { Navbar } from "./Navbar";
 import { AlbumCard } from "./AlbumCard";
 import { ReviewModal } from "./ReviewModal";
 import { AlbumDetailModal } from "./AlbumDetailModal";
 import { AddAlbumModal } from "./AddAlbumModal";
+import { AuthModal } from "./AuthModal";
 import { Footer } from "./Footer";
 import { Disc } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 interface CrateShelfViewProps {
   initialAlbums: Album[];
   initialReviews: Review[];
   defaultUserId?: string;
+  initialUser?: User | null;
 }
 
 export function CrateShelfView({
   initialAlbums,
   initialReviews,
   defaultUserId = "00000000-0000-0000-0000-000000000001",
+  initialUser = null,
 }: CrateShelfViewProps) {
   const [albums, setAlbums] = useState<Album[]>(initialAlbums);
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
+  const [user, setUser] = useState<User | null>(initialUser);
 
   const [activeFilter, setActiveFilter] = useState<"all" | "rated" | "unrated" | "favorites">("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -31,6 +37,27 @@ export function CrateShelfView({
   const [selectedAlbumForRate, setSelectedAlbumForRate] = useState<AlbumWithReview | null>(null);
   const [selectedAlbumForDetail, setSelectedAlbumForDetail] = useState<AlbumWithReview | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+
+  // Subscribe to Supabase auth state changes
+  useEffect(() => {
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUser(null);
+  };
 
   // Map reviews by album_id for fast lookup
   const reviewsByAlbumId = useMemo(() => {
@@ -114,6 +141,8 @@ export function CrateShelfView({
     setAlbums((prev) => [newAlbum, ...prev]);
   };
 
+  const isAuthenticated = !!user;
+
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-text-primary">
       {/* Minimalist Top Navbar */}
@@ -124,6 +153,9 @@ export function CrateShelfView({
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onOpenAddModal={() => setIsAddModalOpen(true)}
+        user={user}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onSignOut={handleSignOut}
       />
 
       {/* Main Content Area */}
@@ -142,11 +174,18 @@ export function CrateShelfView({
             </span>
           </div>
 
-          {searchQuery && (
-            <span className="text-xs text-text-muted">
-              Matching &ldquo;{searchQuery}&rdquo;
-            </span>
-          )}
+          <div className="flex items-center gap-3 text-xs text-text-muted">
+            {!isAuthenticated && (
+              <span className="hidden sm:inline-block text-[11px] text-text-muted/70">
+                Visitor mode (read-only)
+              </span>
+            )}
+            {searchQuery && (
+              <span>
+                Matching &ldquo;{searchQuery}&rdquo;
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Albums Grid */}
@@ -156,6 +195,7 @@ export function CrateShelfView({
               <AlbumCard
                 key={album.id}
                 album={album}
+                isAuthenticated={isAuthenticated}
                 onRate={(item) => setSelectedAlbumForRate(item)}
                 onViewDetails={(item) => setSelectedAlbumForDetail(item)}
               />
@@ -171,7 +211,7 @@ export function CrateShelfView({
               {searchQuery
                 ? `No results for "${searchQuery}".`
                 : activeFilter === "rated"
-                ? "You haven't logged any reviews yet."
+                ? "No reviews logged yet."
                 : activeFilter === "favorites"
                 ? "No favorites marked yet."
                 : "No albums available."}
@@ -194,26 +234,36 @@ export function CrateShelfView({
       {/* Footer Component */}
       <Footer />
 
-      {/* Modals */}
+      {/* Review Modal: only opened when owner triggers */}
       <ReviewModal
         album={selectedAlbumForRate}
-        isOpen={!!selectedAlbumForRate}
+        isOpen={!!selectedAlbumForRate && isAuthenticated}
         onClose={() => setSelectedAlbumForRate(null)}
         onSaved={handleReviewSaved}
         userId={defaultUserId}
       />
 
+      {/* Liner Notes Detail Modal */}
       <AlbumDetailModal
         album={selectedAlbumForDetail}
         isOpen={!!selectedAlbumForDetail}
         onClose={() => setSelectedAlbumForDetail(null)}
         onOpenRate={(item) => setSelectedAlbumForRate(item)}
+        isAuthenticated={isAuthenticated}
       />
 
+      {/* Add Release Modal */}
       <AddAlbumModal
-        isOpen={isAddModalOpen}
+        isOpen={isAddModalOpen && isAuthenticated}
         onClose={() => setIsAddModalOpen(false)}
         onAdded={handleAlbumAdded}
+      />
+
+      {/* Owner Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthenticated={(u) => setUser(u)}
       />
     </div>
   );

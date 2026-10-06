@@ -9,9 +9,15 @@ interface AlbumCardProps {
   album: AlbumWithReview;
   onRate: (album: AlbumWithReview) => void;
   onViewDetails: (album: AlbumWithReview) => void;
+  isAuthenticated?: boolean;
 }
 
-export function AlbumCard({ album, onRate, onViewDetails }: AlbumCardProps) {
+export function AlbumCard({
+  album,
+  onRate,
+  onViewDetails,
+  isAuthenticated = false,
+}: AlbumCardProps) {
   const review = album.review;
   const isRated = review && review.rating !== null && review.rating > 0;
   const isFavorite = review?.is_favorite ?? false;
@@ -45,17 +51,29 @@ export function AlbumCard({ album, onRate, onViewDetails }: AlbumCardProps) {
           </div>
         )}
 
-        {/* Hover quick-rate overlay */}
+        {/* Hover overlay */}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2.5">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRate(album);
-            }}
-            className="w-full py-1.5 px-3 rounded bg-surface/90 hover:bg-surface text-text-primary text-[11px] font-medium border border-border/80 backdrop-blur-md transition-colors cursor-pointer"
-          >
-            {isRated ? "Edit log" : "Log album"}
-          </button>
+          {isAuthenticated ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRate(album);
+              }}
+              className="w-full py-1.5 px-3 rounded bg-surface/90 hover:bg-surface text-text-primary text-[11px] font-medium border border-border/80 backdrop-blur-md transition-colors cursor-pointer"
+            >
+              {isRated ? "Edit log" : "Log album"}
+            </button>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewDetails(album);
+              }}
+              className="w-full py-1.5 px-3 rounded bg-surface/90 hover:bg-surface text-text-primary text-[11px] font-medium border border-border/80 backdrop-blur-md transition-colors cursor-pointer"
+            >
+              Liner notes
+            </button>
+          )}
         </div>
       </div>
 
@@ -77,7 +95,7 @@ export function AlbumCard({ album, onRate, onViewDetails }: AlbumCardProps) {
         </p>
 
         {/* Rating row */}
-        <div className="pt-0.5 flex items-center justify-between min-h-4.5">
+        <div className="pt-0.5 flex items-center justify-between min-h-[18px]">
           {isRated ? (
             <RatingStars
               value={review.rating}
@@ -90,7 +108,7 @@ export function AlbumCard({ album, onRate, onViewDetails }: AlbumCardProps) {
           )}
 
           {album.genres && album.genres.length > 0 && (
-            <span className="text-[10px] text-text-muted/70 truncate max-w-20">
+            <span className="text-[10px] text-text-muted/70 truncate max-w-[80px]">
               {album.genres[0]}
             </span>
           )}

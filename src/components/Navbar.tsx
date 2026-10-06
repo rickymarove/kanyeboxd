@@ -3,6 +3,7 @@
 import React from "react";
 import { Search, Plus } from "lucide-react";
 import { UserStats } from "@/lib/types";
+import { User } from "@supabase/supabase-js";
 
 interface NavbarProps {
   stats: UserStats;
@@ -11,6 +12,9 @@ interface NavbarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onOpenAddModal?: () => void;
+  user: User | null;
+  onOpenAuthModal: () => void;
+  onSignOut: () => void;
 }
 
 export function Navbar({
@@ -20,14 +24,21 @@ export function Navbar({
   searchQuery,
   onSearchChange,
   onOpenAddModal,
+  user,
+  onOpenAuthModal,
+  onSignOut,
 }: NavbarProps) {
   return (
     <header className="sticky top-0 z-30 w-full border-b border-border/70 bg-canvas/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main top bar */}
         <div className="flex items-center justify-between h-14 gap-4">
-          {/* Minimalist Wordmark */}
+          {/* Minimalist Wordmark & Navigation */}
           <div className="flex items-center gap-6 shrink-0">
+            <span className="text-sm font-semibold tracking-tight text-text-primary select-none">
+              kanyeboxd
+            </span>
+
             {/* Desktop Filter Navigation */}
             <nav className="hidden sm:flex items-center gap-1 text-xs">
               <button
@@ -85,9 +96,9 @@ export function Navbar({
             />
           </div>
 
-          {/* Right Section: Discreet Metrics & Minimal Action */}
-          <div className="flex items-center gap-4 shrink-0">
-            {/* Minimal unboxed metrics */}
+          {/* Right Section: Metrics & Auth Controls */}
+          <div className="flex items-center gap-3.5 shrink-0">
+            {/* Minimal metrics */}
             <div className="hidden lg:flex items-center gap-2 text-xs text-text-muted">
               <span>
                 <span className="text-text-secondary font-medium">{stats.totalRated}</span> rated
@@ -104,13 +115,32 @@ export function Navbar({
               </span>
             </div>
 
-            {onOpenAddModal && (
+            {/* Authenticated Owner Actions vs Read-Only Visitor */}
+            {user ? (
+              <div className="flex items-center gap-2">
+                {onOpenAddModal && (
+                  <button
+                    onClick={onOpenAddModal}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border hover:border-border/80 bg-surface hover:bg-surface-raised text-xs font-medium text-text-primary transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-text-muted" />
+                    <span>Add</span>
+                  </button>
+                )}
+                <button
+                  onClick={onSignOut}
+                  className="text-xs text-text-muted hover:text-text-primary px-2 py-1 rounded transition-colors cursor-pointer"
+                  title={`Signed in as ${user.email}`}
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={onOpenAddModal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border hover:border-border/80 bg-surface hover:bg-surface-raised text-xs font-medium text-text-primary transition-colors cursor-pointer"
+                onClick={onOpenAuthModal}
+                className="px-2.5 py-1.5 rounded-md border border-border/80 hover:border-border bg-surface text-xs font-medium text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5 text-text-muted" />
-                <span>Add release</span>
+                Sign in
               </button>
             )}
           </div>
@@ -129,20 +159,38 @@ export function Navbar({
             />
           </div>
 
-          <div className="flex items-center gap-1 overflow-x-auto text-xs">
-            {(["all", "rated", "unrated", "favorites"] as const).map((filter) => (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1 overflow-x-auto text-xs">
+              {(["all", "rated", "unrated", "favorites"] as const).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => onFilterChange(filter)}
+                  className={`px-2.5 py-1 rounded capitalize shrink-0 ${
+                    activeFilter === filter
+                      ? "bg-surface-raised text-text-primary font-medium"
+                      : "text-text-muted"
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+
+            {user ? (
               <button
-                key={filter}
-                onClick={() => onFilterChange(filter)}
-                className={`px-2.5 py-1 rounded capitalize shrink-0 ${
-                  activeFilter === filter
-                    ? "bg-surface-raised text-text-primary font-medium"
-                    : "text-text-muted"
-                }`}
+                onClick={onSignOut}
+                className="text-[11px] text-text-muted hover:text-text-primary shrink-0"
               >
-                {filter}
+                Sign out
               </button>
-            ))}
+            ) : (
+              <button
+                onClick={onOpenAuthModal}
+                className="text-[11px] text-text-secondary hover:text-text-primary shrink-0 underline"
+              >
+                Sign in
+              </button>
+            )}
           </div>
         </div>
       </div>

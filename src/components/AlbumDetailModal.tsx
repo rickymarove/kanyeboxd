@@ -11,6 +11,7 @@ interface AlbumDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenRate: (album: AlbumWithReview) => void;
+  isAuthenticated?: boolean;
 }
 
 export function AlbumDetailModal({
@@ -18,6 +19,7 @@ export function AlbumDetailModal({
   isOpen,
   onClose,
   onOpenRate,
+  isAuthenticated = false,
 }: AlbumDetailModalProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoadingTracks, setIsLoadingTracks] = useState<boolean>(false);
@@ -129,19 +131,21 @@ export function AlbumDetailModal({
                 )}
               </div>
 
-              {/* Action Button */}
-              <div className="pt-3 mt-3 border-t border-border/50">
-                <button
-                  onClick={() => {
-                    onClose();
-                    onOpenRate(album);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border hover:border-border/80 bg-surface hover:bg-surface-raised text-xs font-medium text-text-primary transition-colors cursor-pointer"
-                >
-                  <Edit3 className="w-3 h-3 text-text-muted" />
-                  <span>{isRated ? "Edit log" : "Log this release"}</span>
-                </button>
-              </div>
+              {/* Action Button: only shown if authenticated owner */}
+              {isAuthenticated && (
+                <div className="pt-3 mt-3 border-t border-border/50">
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onOpenRate(album);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border hover:border-border/80 bg-surface hover:bg-surface-raised text-xs font-medium text-text-primary transition-colors cursor-pointer"
+                  >
+                    <Edit3 className="w-3 h-3 text-text-muted" />
+                    <span>{isRated ? "Edit log" : "Log this release"}</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -149,7 +153,7 @@ export function AlbumDetailModal({
           <div className="p-4 rounded-md bg-canvas/40 border border-border/60">
             <div className="flex items-center justify-between pb-2.5 border-b border-border/40 text-xs">
               <span className="font-medium text-text-secondary">
-                Your Log
+                Curator Log
               </span>
               {review?.listened_on && (
                 <div className="flex items-center gap-1 text-text-muted">

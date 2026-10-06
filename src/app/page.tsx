@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { CrateShelfView } from "@/components/CrateShelfView";
 import { Album, Review } from "@/lib/types";
+import { User } from "@supabase/supabase-js";
 
 export const revalidate = 0; // Dynamic server component
 
@@ -8,9 +9,16 @@ export default async function HomePage() {
   const defaultUserId = "00000000-0000-0000-0000-000000000001";
   let albums: Album[] = [];
   let reviews: Review[] = [];
+  let user: User | null = null;
 
   try {
     const supabase = await createClient();
+
+    // Check authenticated user
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+    user = authUser;
 
     // Fetch albums
     const { data: albumsData, error: albumsError } = await supabase
@@ -40,6 +48,7 @@ export default async function HomePage() {
       initialAlbums={albums}
       initialReviews={reviews}
       defaultUserId={defaultUserId}
+      initialUser={user}
     />
   );
 }
