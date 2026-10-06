@@ -2,6 +2,7 @@
 @import "@fontsource/google-sans-flex";
 
 :root {
+  color-scheme: dark;
   --canvas: #0a0a0c;
   --surface: #121215;
   --surface-hover: #18181c;
@@ -52,6 +53,18 @@ html, body {
 
 .minimal-card:hover {
   border-color: #2e2e38;
+}
+
+/* Fallback for native datepicker elements to prevent dark-on-black or white popups */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 /* Discreet scrollbar */

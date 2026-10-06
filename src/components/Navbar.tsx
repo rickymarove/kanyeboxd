@@ -28,10 +28,6 @@ export function Navbar({
         <div className="flex items-center justify-between h-14 gap-4">
           {/* Minimalist Wordmark */}
           <div className="flex items-center gap-6 shrink-0">
-            <span className="text-sm font-semibold tracking-tight text-text-primary select-none">
-              kanyeboxd
-            </span>
-
             {/* Desktop Filter Navigation */}
             <nav className="hidden sm:flex items-center gap-1 text-xs">
               <button

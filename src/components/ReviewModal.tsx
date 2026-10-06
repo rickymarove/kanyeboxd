@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { AlbumWithReview, Review } from "@/lib/types";
 import { RatingStars } from "./RatingStars";
-import { X, Heart, Calendar, Loader2 } from "lucide-react";
+import { DateSelector } from "./DateSelector";
+import { X, Heart, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface ReviewModalProps {
@@ -151,17 +152,14 @@ function ReviewFormContent({
         </button>
       </div>
 
-      {/* Date Listened */}
+      {/* Date Listened using Custom DateSelector */}
       <div>
-        <label className="flex items-center gap-1.5 text-xs font-medium text-text-secondary mb-1.5">
-          <Calendar className="w-3.5 h-3.5 text-text-muted" />
-          <span>Date Listened</span>
+        <label className="block text-xs font-medium text-text-secondary mb-1.5">
+          Date Listened
         </label>
-        <input
-          type="date"
+        <DateSelector
           value={listenedOn}
-          onChange={(e) => setListenedOn(e.target.value)}
-          className="w-full h-9 px-3 rounded-md bg-surface border border-border text-xs text-text-primary focus:outline-none focus:border-border-subtle"
+          onChange={setListenedOn}
         />
       </div>
 

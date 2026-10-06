@@ -77,7 +77,7 @@ export function AlbumCard({ album, onRate, onViewDetails }: AlbumCardProps) {
         </p>
 
         {/* Rating row */}
-        <div className="pt-0.5 flex items-center justify-between min-h-[18px]">
+        <div className="pt-0.5 flex items-center justify-between min-h-4.5">
           {isRated ? (
             <RatingStars
               value={review.rating}
@@ -90,7 +90,7 @@ export function AlbumCard({ album, onRate, onViewDetails }: AlbumCardProps) {
           )}
 
           {album.genres && album.genres.length > 0 && (
-            <span className="text-[10px] text-text-muted/70 truncate max-w-[80px]">
+            <span className="text-[10px] text-text-muted/70 truncate max-w-20">
               {album.genres[0]}
             </span>
           )}

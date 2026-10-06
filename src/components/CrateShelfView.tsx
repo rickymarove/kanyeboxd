@@ -7,6 +7,7 @@ import { AlbumCard } from "./AlbumCard";
 import { ReviewModal } from "./ReviewModal";
 import { AlbumDetailModal } from "./AlbumDetailModal";
 import { AddAlbumModal } from "./AddAlbumModal";
+import { Footer } from "./Footer";
 import { Disc } from "lucide-react";
 
 interface CrateShelfViewProps {
@@ -190,12 +191,8 @@ export function CrateShelfView({
         )}
       </main>
 
-      {/* Minimal Footer */}
-      <footer className="w-full border-t border-border/40 py-6 text-center">
-        <p className="text-[11px] text-text-muted/70 tracking-tight">
-          kanyeboxd
-        </p>
-      </footer>
+      {/* Footer Component */}
+      <Footer />
 
       {/* Modals */}
       <ReviewModal
