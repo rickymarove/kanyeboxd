@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Disc3, Search, Heart, Star, Plus } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { UserStats } from "@/lib/types";
 
 interface NavbarProps {
@@ -22,133 +22,131 @@ export function Navbar({
   onOpenAddModal,
 }: NavbarProps) {
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-border bg-canvas/85 backdrop-blur-md">
+    <header className="sticky top-0 z-30 w-full border-b border-border/70 bg-canvas/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
-          {/* Logo & Identity */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="w-9 h-9 rounded-full bg-surface-raised border border-border flex items-center justify-center text-amber shadow-sm">
-              <Disc3 className="w-5 h-5 animate-[spin_12s_linear_infinite]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-mono text-sm font-bold tracking-widest text-text-primary uppercase">
-                  Kanyeboxd
-                </span>
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber" />
-              </div>
-              <p className="text-[11px] text-text-muted font-mono tracking-tight hidden sm:block">
-                Private Listening Journal & Vault
-              </p>
-            </div>
+        {/* Main top bar */}
+        <div className="flex items-center justify-between h-14 gap-4">
+          {/* Minimalist Wordmark */}
+          <div className="flex items-center gap-6 shrink-0">
+            <span className="text-sm font-semibold tracking-tight text-text-primary select-none">
+              kanyeboxd
+            </span>
+
+            {/* Desktop Filter Navigation */}
+            <nav className="hidden sm:flex items-center gap-1 text-xs">
+              <button
+                onClick={() => onFilterChange("all")}
+                className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  activeFilter === "all"
+                    ? "text-text-primary font-medium bg-surface-raised"
+                    : "text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => onFilterChange("rated")}
+                className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  activeFilter === "rated"
+                    ? "text-text-primary font-medium bg-surface-raised"
+                    : "text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                Rated
+              </button>
+              <button
+                onClick={() => onFilterChange("unrated")}
+                className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  activeFilter === "unrated"
+                    ? "text-text-primary font-medium bg-surface-raised"
+                    : "text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                Unrated
+              </button>
+              <button
+                onClick={() => onFilterChange("favorites")}
+                className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  activeFilter === "favorites"
+                    ? "text-text-primary font-medium bg-surface-raised"
+                    : "text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                Favorites
+              </button>
+            </nav>
           </div>
 
-          {/* Search bar */}
-          <div className="flex-1 max-w-md relative hidden md:block">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+          {/* Minimalist Search Bar */}
+          <div className="flex-1 max-w-sm relative hidden md:block">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
             <input
               type="text"
-              placeholder="Search albums, artists, genres..."
+              placeholder="Search catalog..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full h-9 pl-9 pr-4 rounded-lg bg-surface border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/50 transition-all font-sans"
+              className="w-full h-8 pl-8.5 pr-3 rounded-md bg-surface border border-border/80 text-xs text-text-primary placeholder:text-text-muted/70 focus:outline-none focus:border-border-subtle focus:bg-surface-raised/40 transition-all"
             />
           </div>
 
-          {/* Action / Stats pill */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-md bg-surface border border-border text-xs font-mono text-text-secondary">
+          {/* Right Section: Discreet Metrics & Minimal Action */}
+          <div className="flex items-center gap-4 shrink-0">
+            {/* Minimal unboxed metrics */}
+            <div className="hidden lg:flex items-center gap-2 text-xs text-text-muted">
               <span>
-                <strong className="text-text-primary">{stats.totalRated}</strong> rated
+                <span className="text-text-secondary font-medium">{stats.totalRated}</span> rated
               </span>
-              <span className="text-border">|</span>
-              <span className="flex items-center gap-1">
-                <Star className="w-3 h-3 text-amber fill-amber" />
-                <strong className="text-text-primary">
+              <span>·</span>
+              <span>
+                <span className="text-text-secondary font-medium">
                   {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : "—"}
-                </strong> avg
+                </span> avg
               </span>
-              <span className="text-border">|</span>
-              <span className="flex items-center gap-1">
-                <Heart className="w-3 h-3 text-crimson fill-crimson" />
-                <strong className="text-text-primary">{stats.favoriteCount}</strong> favs
+              <span>·</span>
+              <span>
+                <span className="text-text-secondary font-medium">{stats.favoriteCount}</span> fav
               </span>
             </div>
 
             {onOpenAddModal && (
               <button
                 onClick={onOpenAddModal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface-raised hover:bg-surface-hover border border-border hover:border-amber/50 text-xs font-medium text-text-primary transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border hover:border-border/80 bg-surface hover:bg-surface-raised text-xs font-medium text-text-primary transition-colors cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5 text-amber" />
-                <span>Add Release</span>
+                <Plus className="w-3.5 h-3.5 text-text-muted" />
+                <span>Add release</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Filter bar & Mobile Search */}
-        <div className="py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-border-subtle">
-          {/* Mobile Search */}
-          <div className="relative md:hidden w-full">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+        {/* Mobile controls bar */}
+        <div className="sm:hidden py-2 flex flex-col gap-2 border-t border-border/40">
+          <div className="relative w-full">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
             <input
               type="text"
-              placeholder="Search albums..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full h-8 pl-9 pr-4 rounded-md bg-surface border border-border text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber font-sans"
+              className="w-full h-7 pl-8 pr-3 rounded bg-surface border border-border text-xs text-text-primary placeholder:text-text-muted focus:outline-none"
             />
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-            <button
-              onClick={() => onFilterChange("all")}
-              className={`px-3 py-1 rounded text-xs font-medium transition-colors cursor-pointer shrink-0 ${
-                activeFilter === "all"
-                  ? "bg-text-primary text-canvas font-semibold"
-                  : "text-text-secondary hover:text-text-primary hover:bg-surface"
-              }`}
-            >
-              All Releases
-            </button>
-            <button
-              onClick={() => onFilterChange("rated")}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-colors cursor-pointer shrink-0 ${
-                activeFilter === "rated"
-                  ? "bg-amber text-canvas font-semibold"
-                  : "text-text-secondary hover:text-text-primary hover:bg-surface"
-              }`}
-            >
-              <Star className="w-3 h-3" />
-              <span>Rated</span>
-            </button>
-            <button
-              onClick={() => onFilterChange("unrated")}
-              className={`px-3 py-1 rounded text-xs font-medium transition-colors cursor-pointer shrink-0 ${
-                activeFilter === "unrated"
-                  ? "bg-text-primary text-canvas font-semibold"
-                  : "text-text-secondary hover:text-text-primary hover:bg-surface"
-              }`}
-            >
-              Unrated
-            </button>
-            <button
-              onClick={() => onFilterChange("favorites")}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-colors cursor-pointer shrink-0 ${
-                activeFilter === "favorites"
-                  ? "bg-crimson text-white font-semibold"
-                  : "text-text-secondary hover:text-text-primary hover:bg-surface"
-              }`}
-            >
-              <Heart className="w-3 h-3" />
-              <span>Favorites</span>
-            </button>
-          </div>
-
-          <div className="text-[11px] font-mono text-text-muted text-right hidden sm:block">
-            Crate Shelf View
+          <div className="flex items-center gap-1 overflow-x-auto text-xs">
+            {(["all", "rated", "unrated", "favorites"] as const).map((filter) => (
+              <button
+                key={filter}
+                onClick={() => onFilterChange(filter)}
+                className={`px-2.5 py-1 rounded capitalize shrink-0 ${
+                  activeFilter === filter
+                    ? "bg-surface-raised text-text-primary font-medium"
+                    : "text-text-muted"
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
           </div>
         </div>
       </div>

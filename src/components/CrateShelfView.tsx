@@ -7,7 +7,7 @@ import { AlbumCard } from "./AlbumCard";
 import { ReviewModal } from "./ReviewModal";
 import { AlbumDetailModal } from "./AlbumDetailModal";
 import { AddAlbumModal } from "./AddAlbumModal";
-import { Disc3 } from "lucide-react";
+import { Disc } from "lucide-react";
 
 interface CrateShelfViewProps {
   initialAlbums: Album[];
@@ -31,7 +31,7 @@ export function CrateShelfView({
   const [selectedAlbumForDetail, setSelectedAlbumForDetail] = useState<AlbumWithReview | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
 
-  // Map reviews by album_id for fast composite lookup
+  // Map reviews by album_id for fast lookup
   const reviewsByAlbumId = useMemo(() => {
     const map = new Map<string, Review>();
     reviews.forEach((r) => {
@@ -90,10 +90,8 @@ export function CrateShelfView({
     });
   }, [albumsWithReviews, searchQuery, activeFilter]);
 
-  // Review callback
   const handleReviewSaved = (savedReview: Review | null) => {
     if (!savedReview) {
-      // Review was deleted
       if (selectedAlbumForRate) {
         setReviews((prev) => prev.filter((r) => r.album_id !== selectedAlbumForRate.id));
       }
@@ -116,8 +114,8 @@ export function CrateShelfView({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-canvas">
-      {/* Sticky Top Navbar */}
+    <div className="min-h-screen flex flex-col bg-canvas text-text-primary">
+      {/* Minimalist Top Navbar */}
       <Navbar
         stats={stats}
         activeFilter={activeFilter}
@@ -127,30 +125,32 @@ export function CrateShelfView({
         onOpenAddModal={() => setIsAddModalOpen(true)}
       />
 
-      {/* Main Vinyl Shelf Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Shelf Header */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 pb-6 border-b border-border/80 mb-8">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
-              {activeFilter === "all" && "Record Crate"}
-              {activeFilter === "rated" && "Rated Catalog"}
-              {activeFilter === "unrated" && "Unrated Records"}
-              {activeFilter === "favorites" && "Favorite Spins"}
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        {/* Section Headline */}
+        <div className="flex items-baseline justify-between pb-4 mb-6 border-b border-border/50">
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-sm font-semibold tracking-tight text-text-primary">
+              {activeFilter === "all" && "Catalog"}
+              {activeFilter === "rated" && "Rated"}
+              {activeFilter === "unrated" && "Unrated"}
+              {activeFilter === "favorites" && "Favorites"}
             </h1>
-            <p className="text-xs font-mono text-text-secondary mt-1">
-              Showing {filteredAlbums.length} of {albums.length} releases in archive
-            </p>
+            <span className="text-xs text-text-muted">
+              {filteredAlbums.length} {filteredAlbums.length === 1 ? "release" : "releases"}
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-mono text-text-muted">
-            <span>Sorted by Crate Order</span>
-          </div>
+          {searchQuery && (
+            <span className="text-xs text-text-muted">
+              Matching &ldquo;{searchQuery}&rdquo;
+            </span>
+          )}
         </div>
 
         {/* Albums Grid */}
         {filteredAlbums.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-5 gap-y-7">
             {filteredAlbums.map((album) => (
               <AlbumCard
                 key={album.id}
@@ -161,21 +161,19 @@ export function CrateShelfView({
             ))}
           </div>
         ) : (
-          <div className="py-24 flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-border bg-surface/40 p-8">
-            <div className="w-12 h-12 rounded-full bg-surface-raised border border-border flex items-center justify-center text-text-muted mb-4">
-              <Disc3 className="w-6 h-6 stroke-1 opacity-70" />
-            </div>
-            <h3 className="text-base font-semibold text-text-primary mb-1">
+          <div className="py-20 flex flex-col items-center justify-center text-center">
+            <Disc className="w-8 h-8 text-text-muted/40 stroke-1 mb-3" />
+            <h3 className="text-xs font-medium text-text-secondary mb-1">
               No releases found
             </h3>
-            <p className="text-xs text-text-secondary max-w-sm mb-5">
+            <p className="text-xs text-text-muted max-w-xs mb-4">
               {searchQuery
-                ? `No albums matched "${searchQuery}". Try searching by another artist or genre.`
+                ? `No results for "${searchQuery}".`
                 : activeFilter === "rated"
-                ? "You haven't logged any ratings yet. Pick an album and rate it to start your journal."
+                ? "You haven't logged any reviews yet."
                 : activeFilter === "favorites"
-                ? "You haven't marked any favorite albums yet."
-                : "No albums available in this view."}
+                ? "No favorites marked yet."
+                : "No albums available."}
             </p>
             {activeFilter !== "all" && (
               <button
@@ -183,23 +181,23 @@ export function CrateShelfView({
                   setActiveFilter("all");
                   setSearchQuery("");
                 }}
-                className="px-4 py-2 rounded-md bg-surface-raised hover:bg-surface border border-border text-xs font-medium text-text-primary transition-colors cursor-pointer"
+                className="text-xs text-text-secondary hover:text-text-primary underline cursor-pointer"
               >
-                Clear Filters
+                Show all releases
               </button>
             )}
           </div>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="w-full border-t border-border py-6 bg-canvas text-center">
-        <p className="text-xs font-mono text-text-muted">
-          Kanyeboxd · Private Music Journal & Listening Vault
+      {/* Minimal Footer */}
+      <footer className="w-full border-t border-border/40 py-6 text-center">
+        <p className="text-[11px] text-text-muted/70 tracking-tight">
+          kanyeboxd
         </p>
       </footer>
 
-      {/* Review Modal */}
+      {/* Modals */}
       <ReviewModal
         album={selectedAlbumForRate}
         isOpen={!!selectedAlbumForRate}
@@ -208,7 +206,6 @@ export function CrateShelfView({
         userId={defaultUserId}
       />
 
-      {/* Liner Notes Detail Modal */}
       <AlbumDetailModal
         album={selectedAlbumForDetail}
         isOpen={!!selectedAlbumForDetail}
@@ -216,7 +213,6 @@ export function CrateShelfView({
         onOpenRate={(item) => setSelectedAlbumForRate(item)}
       />
 
-      {/* Add Release Modal */}
       <AddAlbumModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}

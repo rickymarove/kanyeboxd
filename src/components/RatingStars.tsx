@@ -23,9 +23,9 @@ export function RatingStars({
   const currentVal = hoverVal !== null ? hoverVal : (value ?? 0);
 
   const starSizes = {
-    sm: "w-3.5 h-3.5",
-    md: "w-4 h-4",
-    lg: "w-6 h-6",
+    sm: "w-3 h-3",
+    md: "w-3.5 h-3.5",
+    lg: "w-5 h-5",
   };
 
   const handleMouseMove = (
@@ -42,7 +42,6 @@ export function RatingStars({
   const handleClick = (starIndex: number) => {
     if (readOnly || !onChange) return;
     const target = hoverVal ?? starIndex;
-    // Clicking the same value clears it
     if (value === target) {
       onChange(0);
     } else {
@@ -51,7 +50,7 @@ export function RatingStars({
   };
 
   return (
-    <div className="inline-flex items-center gap-1.5 select-none" onMouseLeave={() => setHoverVal(null)}>
+    <div className="inline-flex items-center gap-1 select-none" onMouseLeave={() => setHoverVal(null)}>
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((starIndex) => {
           const filled = currentVal >= starIndex;
@@ -63,26 +62,24 @@ export function RatingStars({
               type="button"
               disabled={readOnly}
               aria-label={`Rate ${starIndex} stars`}
-              className={`relative transition-transform ${
+              className={`relative transition-opacity ${
                 readOnly
                   ? "cursor-default"
-                  : "cursor-pointer hover:scale-110 active:scale-95"
+                  : "cursor-pointer hover:opacity-80"
               }`}
               onMouseMove={(e) => handleMouseMove(e, starIndex)}
               onClick={() => handleClick(starIndex)}
             >
               {half ? (
                 <div className="relative">
-                  {/* Empty star background */}
                   <Star
                     className={`${starSizes[size]} text-border fill-transparent`}
-                    strokeWidth={1.5}
+                    strokeWidth={1.25}
                   />
-                  {/* Half-filled overlay */}
                   <div className="absolute inset-0 overflow-hidden w-1/2">
                     <Star
                       className={`${starSizes[size]} text-amber fill-amber`}
-                      strokeWidth={1.5}
+                      strokeWidth={1.25}
                     />
                   </div>
                 </div>
@@ -90,10 +87,10 @@ export function RatingStars({
                 <Star
                   className={`${starSizes[size]} ${
                     filled
-                      ? "text-amber fill-amber drop-shadow-[0_0_8px_rgba(229,169,60,0.3)]"
+                      ? "text-amber fill-amber"
                       : "text-border fill-transparent"
                   }`}
-                  strokeWidth={1.5}
+                  strokeWidth={1.25}
                 />
               )}
             </button>
@@ -102,7 +99,7 @@ export function RatingStars({
       </div>
 
       {showValue && (
-        <span className="font-mono text-xs font-semibold tracking-tight text-amber ml-1">
+        <span className="text-[11px] font-medium text-text-secondary ml-1 tracking-tight">
           {currentVal > 0 ? currentVal.toFixed(1) : "—"}
         </span>
       )}

@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
+import "@fontsource/google-sans-flex";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -13,8 +9,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kanyeboxd · Private Music Journal & Vault",
-  description: "Personal vinyl shelf, album ratings, and listening archive.",
+  title: "kanyeboxd",
+  description: "A minimalist music rating journal and personal vault.",
 };
 
 export default function RootLayout({
@@ -25,9 +21,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-canvas text-text-primary antialiased selection:bg-amber selection:text-canvas">
+      <body className="min-h-full flex flex-col bg-canvas text-text-primary antialiased font-sans selection:bg-surface-raised selection:text-text-primary">
         {children}
       </body>
     </html>

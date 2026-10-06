@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Album } from "@/lib/types";
-import { X, Plus, Disc, Loader2 } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface AddAlbumModalProps {
@@ -57,7 +57,6 @@ export function AddAlbumModal({ isOpen, onClose, onAdded }: AddAlbumModalProps) 
 
       onAdded(data as Album);
       onClose();
-      // Reset form
       setTitle("");
       setArtist("");
       setCoverUrl("");
@@ -72,35 +71,32 @@ export function AddAlbumModal({ isOpen, onClose, onAdded }: AddAlbumModalProps) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md rounded-xl bg-surface border border-border shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="relative w-full max-w-sm rounded-lg bg-surface border border-border shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border bg-surface-raised/40">
-          <div className="flex items-center gap-2">
-            <Disc className="w-4 h-4 text-amber" />
-            <h2 className="font-semibold text-sm text-text-primary">
-              Add Release to Crate
-            </h2>
-          </div>
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60">
+          <h2 className="text-xs font-semibold text-text-primary">
+            Add Release
+          </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-md hover:bg-surface-raised text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+            className="p-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
           {errorMsg && (
-            <div className="p-3 rounded-md bg-crimson/10 border border-crimson/30 text-crimson text-xs">
+            <div className="p-2.5 rounded bg-crimson/10 border border-crimson/30 text-crimson text-xs">
               {errorMsg}
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-mono text-text-secondary mb-1">
-              Album Title *
+            <label className="block text-xs font-medium text-text-secondary mb-1">
+              Title *
             </label>
             <input
               type="text"
@@ -108,12 +104,12 @@ export function AddAlbumModal({ isOpen, onClose, onAdded }: AddAlbumModalProps) 
               placeholder="e.g. In Rainbows"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full h-9 px-3 rounded-md bg-surface border border-border text-xs sm:text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber transition-colors"
+              className="w-full h-8 px-2.5 rounded bg-surface border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-border-subtle"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-mono text-text-secondary mb-1">
+            <label className="block text-xs font-medium text-text-secondary mb-1">
               Artist *
             </label>
             <input
@@ -122,84 +118,80 @@ export function AddAlbumModal({ isOpen, onClose, onAdded }: AddAlbumModalProps) 
               placeholder="e.g. Radiohead"
               value={artist}
               onChange={(e) => setArtist(e.target.value)}
-              className="w-full h-9 px-3 rounded-md bg-surface border border-border text-xs sm:text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber transition-colors"
+              className="w-full h-8 px-2.5 rounded bg-surface border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-border-subtle"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-mono text-text-secondary mb-1">
-                Release Year
+              <label className="block text-xs font-medium text-text-secondary mb-1">
+                Year
               </label>
               <input
                 type="number"
                 placeholder="2007"
                 value={releaseYear}
                 onChange={(e) => setReleaseYear(e.target.value)}
-                className="w-full h-9 px-3 rounded-md bg-surface border border-border text-xs sm:text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber transition-colors font-mono"
+                className="w-full h-8 px-2.5 rounded bg-surface border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-border-subtle"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-text-secondary mb-1">
-                Track Count
+              <label className="block text-xs font-medium text-text-secondary mb-1">
+                Tracks
               </label>
               <input
                 type="number"
                 placeholder="10"
                 value={trackCount}
                 onChange={(e) => setTrackCount(e.target.value)}
-                className="w-full h-9 px-3 rounded-md bg-surface border border-border text-xs sm:text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber transition-colors font-mono"
+                className="w-full h-8 px-2.5 rounded bg-surface border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-border-subtle"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-mono text-text-secondary mb-1">
-              Cover Artwork URL
+            <label className="block text-xs font-medium text-text-secondary mb-1">
+              Artwork URL
             </label>
             <input
               type="url"
-              placeholder="https://... (image link)"
+              placeholder="https://..."
               value={coverUrl}
               onChange={(e) => setCoverUrl(e.target.value)}
-              className="w-full h-9 px-3 rounded-md bg-surface border border-border text-xs sm:text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber transition-colors font-mono"
+              className="w-full h-8 px-2.5 rounded bg-surface border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-border-subtle"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-mono text-text-secondary mb-1">
+            <label className="block text-xs font-medium text-text-secondary mb-1">
               Genres (comma-separated)
             </label>
             <input
               type="text"
-              placeholder="Art Rock, Alternative, Electronic"
+              placeholder="Alternative, Art Rock"
               value={genres}
               onChange={(e) => setGenres(e.target.value)}
-              className="w-full h-9 px-3 rounded-md bg-surface border border-border text-xs sm:text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber transition-colors"
+              className="w-full h-8 px-2.5 rounded bg-surface border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-border-subtle"
             />
           </div>
 
-          <div className="pt-3 flex items-center justify-end gap-2 border-t border-border">
+          <div className="pt-3 flex items-center justify-end gap-2 border-t border-border/50">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-md text-xs font-medium text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+              className="px-3 py-1.5 text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-amber hover:bg-amber/90 text-canvas text-xs font-semibold tracking-wide transition-all shadow-md cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-text-primary hover:bg-white text-canvas text-xs font-medium transition-colors cursor-pointer disabled:opacity-50"
             >
-              {isSubmitting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Plus className="w-3.5 h-3.5" />
-              )}
-              <span>Add to Crate</span>
+              {isSubmitting && <Loader2 className="w-3 h-3 animate-spin" />}
+              <span>Add</span>
             </button>
           </div>
         </form>

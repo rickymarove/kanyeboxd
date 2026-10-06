@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { AlbumWithReview, Review } from "@/lib/types";
 import { RatingStars } from "./RatingStars";
-import { X, Heart, Calendar, Music2, Trash2, Check, Loader2 } from "lucide-react";
+import { X, Heart, Calendar, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface ReviewModalProps {
@@ -91,7 +91,7 @@ function ReviewFormContent({
 
   const handleDelete = async () => {
     if (!existingReview?.id) return;
-    if (!confirm("Are you sure you want to remove this rating and review?")) return;
+    if (!confirm("Remove this rating and review?")) return;
 
     setIsSubmitting(true);
     const supabase = createClient();
@@ -116,18 +116,18 @@ function ReviewFormContent({
   };
 
   return (
-    <form onSubmit={handleSave} className="p-4 sm:p-6 overflow-y-auto space-y-5">
+    <form onSubmit={handleSave} className="p-5 sm:p-6 overflow-y-auto space-y-5">
       {errorMsg && (
-        <div className="p-3 rounded-md bg-crimson/10 border border-crimson/30 text-crimson text-xs">
+        <div className="p-2.5 rounded bg-crimson/10 border border-crimson/30 text-crimson text-xs">
           {errorMsg}
         </div>
       )}
 
       {/* Rating & Favorite Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-surface-raised/60 border border-border/80">
+      <div className="flex items-center justify-between pb-4 border-b border-border/50">
         <div>
-          <label className="block text-xs font-mono font-medium text-text-secondary mb-1.5">
-            Rating (5-Star Scale)
+          <label className="block text-xs font-medium text-text-secondary mb-1">
+            Score
           </label>
           <RatingStars
             value={rating}
@@ -137,78 +137,72 @@ function ReviewFormContent({
           />
         </div>
 
-        <div className="flex items-center gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/60">
-          <button
-            type="button"
-            onClick={() => setIsFavorite(!isFavorite)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium border transition-colors cursor-pointer ${
-              isFavorite
-                ? "bg-crimson/15 border-crimson text-crimson"
-                : "bg-surface border-border text-text-secondary hover:text-text-primary"
-            }`}
-          >
-            <Heart
-              className={`w-4 h-4 ${isFavorite ? "fill-crimson" : ""}`}
-            />
-            <span>Favorite</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setIsFavorite(!isFavorite)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors cursor-pointer ${
+            isFavorite
+              ? "bg-crimson/10 border-crimson/40 text-crimson"
+              : "border-border text-text-muted hover:text-text-primary"
+          }`}
+        >
+          <Heart className={`w-3.5 h-3.5 ${isFavorite ? "fill-crimson" : ""}`} />
+          <span>Favorite</span>
+        </button>
       </div>
 
       {/* Date Listened */}
       <div>
-        <label className="flex items-center gap-1.5 text-xs font-mono font-medium text-text-secondary mb-1.5">
-          <Calendar className="w-3.5 h-3.5 text-amber" />
+        <label className="flex items-center gap-1.5 text-xs font-medium text-text-secondary mb-1.5">
+          <Calendar className="w-3.5 h-3.5 text-text-muted" />
           <span>Date Listened</span>
         </label>
         <input
           type="date"
           value={listenedOn}
           onChange={(e) => setListenedOn(e.target.value)}
-          className="w-full h-10 px-3 rounded-md bg-surface border border-border text-xs sm:text-sm text-text-primary focus:outline-none focus:border-amber transition-colors font-mono"
+          className="w-full h-9 px-3 rounded-md bg-surface border border-border text-xs text-text-primary focus:outline-none focus:border-border-subtle"
         />
       </div>
 
-      {/* Standout Favorite Tracks */}
+      {/* Standout Tracks */}
       <div>
-        <label className="flex items-center gap-1.5 text-xs font-mono font-medium text-text-secondary mb-1.5">
-          <Music2 className="w-3.5 h-3.5 text-amber" />
-          <span>Standout Tracks (comma-separated)</span>
+        <label className="block text-xs font-medium text-text-secondary mb-1.5">
+          Standout Tracks
         </label>
         <input
           type="text"
-          placeholder="e.g. Runaway, Devil in a New Dress, Gorgeous"
+          placeholder="e.g. Runaway, Devil in a New Dress"
           value={favoriteTracks}
           onChange={(e) => setFavoriteTracks(e.target.value)}
-          className="w-full h-10 px-3 rounded-md bg-surface border border-border text-xs sm:text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber transition-colors"
+          className="w-full h-9 px-3 rounded-md bg-surface border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-border-subtle"
         />
       </div>
 
       {/* Journal Review Text */}
       <div>
-        <label className="block text-xs font-mono font-medium text-text-secondary mb-1.5">
-          Listening Notes / Review
+        <label className="block text-xs font-medium text-text-secondary mb-1.5">
+          Notes & Thoughts
         </label>
         <textarea
-          rows={4}
-          placeholder="Write your impressions, favorite moments, lyrical standouts, or memories associated with this spin..."
+          rows={3}
+          placeholder="Personal notes, favorite moments, thoughts on production..."
           value={reviewText}
           onChange={(e) => setReviewText(e.target.value)}
-          className="w-full p-3 rounded-md bg-surface border border-border text-xs sm:text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber transition-colors resize-none leading-relaxed"
+          className="w-full p-3 rounded-md bg-surface border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-border-subtle resize-none leading-relaxed"
         />
       </div>
 
-      {/* Actions */}
-      <div className="pt-2 flex items-center justify-between gap-3 border-t border-border">
+      {/* Modal Actions */}
+      <div className="pt-3 flex items-center justify-between border-t border-border/50">
         {existingReview ? (
           <button
             type="button"
             onClick={handleDelete}
             disabled={isSubmitting}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium text-crimson hover:bg-crimson/10 transition-colors cursor-pointer"
+            className="text-xs text-crimson/80 hover:text-crimson transition-colors cursor-pointer"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Delete Log</span>
+            Remove log
           </button>
         ) : (
           <div />
@@ -219,21 +213,17 @@ function ReviewFormContent({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-4 py-2 rounded-md text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface-raised transition-colors cursor-pointer"
+            className="px-3 py-1.5 text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-md bg-amber hover:bg-amber/90 text-canvas text-xs font-semibold tracking-wide transition-all shadow-md cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-text-primary hover:bg-white text-canvas text-xs font-medium transition-colors cursor-pointer disabled:opacity-50"
           >
-            {isSubmitting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Check className="w-3.5 h-3.5" />
-            )}
-            <span>Save Log</span>
+            {isSubmitting && <Loader2 className="w-3 h-3 animate-spin" />}
+            <span>Save</span>
           </button>
         </div>
       </div>
@@ -251,24 +241,24 @@ export function ReviewModal({
   if (!isOpen || !album) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg rounded-xl bg-surface border border-border shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-border bg-surface-raised/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="relative w-full max-w-md rounded-lg bg-surface border border-border shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Minimal Modal Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border/60">
           <div className="flex items-center gap-3">
             {album.cover_url && (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={album.cover_url}
                 alt={album.title}
-                className="w-12 h-12 rounded object-cover border border-border shrink-0"
+                className="w-10 h-10 rounded object-cover border border-border/60 shrink-0"
               />
             )}
             <div>
-              <h2 className="font-semibold text-sm sm:text-base text-text-primary line-clamp-1">
+              <h2 className="text-xs font-semibold text-text-primary line-clamp-1">
                 {album.title}
               </h2>
-              <p className="text-xs text-text-secondary line-clamp-1 font-mono">
+              <p className="text-[11px] text-text-muted line-clamp-1">
                 {album.artist} {album.release_year ? `· ${album.release_year}` : ""}
               </p>
             </div>
@@ -276,13 +266,13 @@ export function ReviewModal({
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-surface-raised text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+            className="p-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Modal Form Keyed to Album ID to reset state cleanly */}
+        {/* Form Body */}
         <ReviewFormContent
           key={album.id}
           album={album}

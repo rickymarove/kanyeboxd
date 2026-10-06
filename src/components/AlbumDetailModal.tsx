@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { AlbumWithReview, Track } from "@/lib/types";
 import { RatingStars } from "./RatingStars";
-import { X, Heart, Calendar, Disc, Clock, Edit3 } from "lucide-react";
+import { X, Heart, Calendar, Disc, Edit3 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface AlbumDetailModalProps {
@@ -25,7 +25,6 @@ export function AlbumDetailModal({
   useEffect(() => {
     if (!album) return;
 
-    // Fetch tracks for this album from Supabase
     async function loadTracks() {
       setIsLoadingTracks(true);
       const supabase = createClient();
@@ -58,18 +57,18 @@ export function AlbumDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl rounded-xl bg-surface border border-border shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="relative w-full max-w-xl rounded-lg bg-surface border border-border shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header Bar */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-surface-raised/40">
-          <span className="text-xs font-mono text-text-muted tracking-wider uppercase">
-            Liner Notes & Archive Record
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60">
+          <span className="text-xs text-text-muted">
+            Release Details
           </span>
           <button
             onClick={onClose}
-            className="p-1 rounded-md hover:bg-surface-raised text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+            className="p-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -77,7 +76,7 @@ export function AlbumDetailModal({
         <div className="p-5 sm:p-6 overflow-y-auto space-y-6">
           {/* Top Hero Section: Cover & Primary Details */}
           <div className="flex flex-col sm:flex-row gap-5 items-start">
-            <div className="relative w-36 sm:w-44 aspect-square shrink-0 rounded-lg overflow-hidden border border-border bg-surface-raised shadow-lg">
+            <div className="relative w-32 sm:w-36 aspect-square shrink-0 rounded-md overflow-hidden border border-border/60 bg-canvas">
               {album.cover_url ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
@@ -87,35 +86,32 @@ export function AlbumDetailModal({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-text-muted">
-                  <Disc className="w-12 h-12 stroke-1" />
+                  <Disc className="w-8 h-8 stroke-1 opacity-50" />
                 </div>
               )}
               {isFavorite && (
-                <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/80 flex items-center justify-center text-crimson">
-                  <Heart className="w-3.5 h-3.5 fill-crimson" />
+                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-crimson">
+                  <Heart className="w-3 h-3 fill-crimson" />
                 </div>
               )}
             </div>
 
             <div className="flex-1 flex flex-col justify-between self-stretch">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-text-primary leading-tight">
+                <h1 className="text-lg sm:text-xl font-semibold text-text-primary leading-tight">
                   {album.title}
                 </h1>
-                <p className="text-sm sm:text-base text-text-secondary mt-1 font-medium">
+                <p className="text-xs sm:text-sm text-text-secondary mt-1">
                   {album.artist}
                 </p>
 
-                <div className="flex flex-wrap items-center gap-2 mt-3">
-                  {album.release_year && (
-                    <span className="px-2 py-0.5 rounded bg-surface-raised border border-border text-xs font-mono text-text-secondary">
-                      {album.release_year}
-                    </span>
-                  )}
+                <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-text-muted">
+                  {album.release_year && <span>{album.release_year}</span>}
                   {album.track_count > 0 && (
-                    <span className="px-2 py-0.5 rounded bg-surface-raised border border-border text-xs font-mono text-text-secondary">
-                      {album.track_count} tracks
-                    </span>
+                    <>
+                      <span>·</span>
+                      <span>{album.track_count} tracks</span>
+                    </>
                   )}
                 </div>
 
@@ -124,7 +120,7 @@ export function AlbumDetailModal({
                     {album.genres.map((g) => (
                       <span
                         key={g}
-                        className="px-2 py-0.5 rounded-full bg-border-subtle text-[11px] font-mono text-text-muted"
+                        className="px-2 py-0.5 rounded text-[11px] bg-surface-raised text-text-muted"
                       >
                         {g}
                       </span>
@@ -133,63 +129,61 @@ export function AlbumDetailModal({
                 )}
               </div>
 
-              {/* Action */}
-              <div className="pt-4 mt-4 border-t border-border/60 flex items-center gap-3">
+              {/* Action Button */}
+              <div className="pt-3 mt-3 border-t border-border/50">
                 <button
                   onClick={() => {
                     onClose();
                     onOpenRate(album);
                   }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-amber hover:bg-amber/90 text-canvas text-xs font-semibold tracking-wide transition-all shadow-md cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border hover:border-border/80 bg-surface hover:bg-surface-raised text-xs font-medium text-text-primary transition-colors cursor-pointer"
                 >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  <span>{isRated ? "Edit Rating & Review" : "Rate This Album"}</span>
+                  <Edit3 className="w-3 h-3 text-text-muted" />
+                  <span>{isRated ? "Edit log" : "Log this release"}</span>
                 </button>
               </div>
             </div>
           </div>
 
           {/* User Review / Diary Entry */}
-          <div className="p-4 rounded-lg bg-surface-raised/50 border border-border">
-            <div className="flex items-center justify-between pb-3 border-b border-border/60">
-              <span className="text-xs font-mono font-medium text-text-secondary">
-                Personal Log
+          <div className="p-4 rounded-md bg-canvas/40 border border-border/60">
+            <div className="flex items-center justify-between pb-2.5 border-b border-border/40 text-xs">
+              <span className="font-medium text-text-secondary">
+                Your Log
               </span>
               {review?.listened_on && (
-                <div className="flex items-center gap-1.5 text-xs font-mono text-text-muted">
-                  <Calendar className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1 text-text-muted">
+                  <Calendar className="w-3 h-3" />
                   <span>{review.listened_on}</span>
                 </div>
               )}
             </div>
 
-            <div className="pt-3">
+            <div className="pt-2.5">
               {isRated ? (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   <div className="flex items-center gap-2">
                     <RatingStars
                       value={review.rating}
                       readOnly
-                      size="md"
+                      size="sm"
                       showValue
                     />
                     {isFavorite && (
-                      <span className="inline-flex items-center gap-1 text-xs text-crimson font-medium ml-2">
-                        <Heart className="w-3.5 h-3.5 fill-crimson" />
+                      <span className="inline-flex items-center gap-1 text-xs text-crimson ml-1">
+                        <Heart className="w-3 h-3 fill-crimson" />
                         <span>Favorite</span>
                       </span>
                     )}
                   </div>
 
                   {review.favorite_tracks && review.favorite_tracks.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      <span className="text-xs text-text-muted font-mono mr-1">
-                        Standout Tracks:
-                      </span>
+                    <div className="flex flex-wrap items-center gap-1 pt-0.5 text-xs">
+                      <span className="text-text-muted">Standouts:</span>
                       {review.favorite_tracks.map((track) => (
                         <span
                           key={track}
-                          className="px-2 py-0.5 rounded bg-surface border border-border text-xs text-amber font-mono"
+                          className="px-1.5 py-0.5 rounded bg-surface border border-border text-[11px] text-text-secondary"
                         >
                           {track}
                         </span>
@@ -198,31 +192,31 @@ export function AlbumDetailModal({
                   )}
 
                   {review.review_text && (
-                    <p className="text-xs sm:text-sm text-text-primary leading-relaxed pt-1 whitespace-pre-wrap font-sans">
+                    <p className="text-xs text-text-secondary leading-relaxed pt-1 whitespace-pre-wrap">
                       {review.review_text}
                     </p>
                   )}
                 </div>
               ) : (
-                <div className="py-2 text-center text-xs text-text-muted">
-                  You have not logged or rated this album yet.
-                </div>
+                <p className="text-xs text-text-muted">
+                  Not rated yet.
+                </p>
               )}
             </div>
           </div>
 
           {/* Tracklist Section */}
           <div>
-            <h3 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3">
+            <h3 className="text-xs font-medium text-text-secondary mb-2.5">
               Tracklist
             </h3>
 
             {isLoadingTracks ? (
-              <div className="py-4 text-center text-xs text-text-muted font-mono">
+              <div className="py-3 text-center text-xs text-text-muted">
                 Loading tracks...
               </div>
             ) : tracks.length > 0 ? (
-              <div className="divide-y divide-border/40 rounded-lg border border-border bg-surface overflow-hidden">
+              <div className="divide-y divide-border/30 rounded border border-border/60 bg-surface overflow-hidden">
                 {tracks.map((t) => {
                   const isStandout = review?.favorite_tracks?.some(
                     (fav) => fav.toLowerCase().trim() === t.title.toLowerCase().trim()
@@ -231,10 +225,10 @@ export function AlbumDetailModal({
                   return (
                     <div
                       key={t.id}
-                      className="px-3.5 py-2.5 flex items-center justify-between text-xs hover:bg-surface-raised/50 transition-colors"
+                      className="px-3 py-2 flex items-center justify-between text-xs hover:bg-surface-raised/40 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="w-5 text-center font-mono text-text-muted">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-4 text-center text-text-muted text-[11px]">
                           {t.track_number}
                         </span>
                         <span
@@ -245,16 +239,15 @@ export function AlbumDetailModal({
                           {t.title}
                         </span>
                         {isStandout && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber/15 text-amber font-mono">
+                          <span className="px-1.5 py-0.2 rounded text-[10px] bg-amber/10 text-amber">
                             Pick
                           </span>
                         )}
                       </div>
 
                       {t.duration_seconds && (
-                        <span className="font-mono text-text-muted flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-text-muted/60" />
-                          <span>{formatDuration(t.duration_seconds)}</span>
+                        <span className="text-text-muted text-[11px]">
+                          {formatDuration(t.duration_seconds)}
                         </span>
                       )}
                     </div>
@@ -262,8 +255,8 @@ export function AlbumDetailModal({
                 })}
               </div>
             ) : (
-              <div className="p-4 rounded-lg bg-surface border border-border text-center text-xs text-text-muted font-mono">
-                Tracklist metadata not yet cataloged.
+              <div className="p-3 rounded border border-border/40 text-center text-xs text-text-muted">
+                No tracks listed.
               </div>
             )}
           </div>

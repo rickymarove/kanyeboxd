@@ -1,18 +1,19 @@
 @import "tailwindcss";
+@import "@fontsource/google-sans-flex";
 
 :root {
-  --canvas: #0c0d11;
-  --surface: #141720;
-  --surface-hover: #1a1e2b;
-  --surface-raised: #202636;
-  --border: #222736;
-  --border-subtle: #191d28;
-  --amber: #e5a93c;
-  --amber-dim: #996e23;
-  --crimson: #e24a4a;
-  --text-primary: #f4f5f7;
-  --text-secondary: #949cb0;
-  --text-muted: #60677a;
+  --canvas: #0a0a0c;
+  --surface: #121215;
+  --surface-hover: #18181c;
+  --surface-raised: #1e1e23;
+  --border: #202025;
+  --border-subtle: #161619;
+  --amber: #f59e0b;
+  --amber-dim: #92400e;
+  --crimson: #ef4444;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
 }
 
 @theme inline {
@@ -28,50 +29,43 @@
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "Google Sans Flex", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
-body {
+html, body {
   background-color: var(--canvas);
   color: var(--text-primary);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
+  letter-spacing: -0.011em;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom vinyl groove texture / card styling */
-.vinyl-card {
-  position: relative;
+/* Minimalist card styling */
+.minimal-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.2s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.vinyl-card:hover {
-  transform: translateY(-2px);
-  border-color: #333a4f;
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6);
+.minimal-card:hover {
+  border-color: #2e2e38;
 }
 
-.vinyl-sleeve-edge {
-  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.08),
-              inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-/* Custom scrollbars */
+/* Discreet scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: var(--canvas);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3c445c;
+  background: #33333d;
 }
