@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AlbumWithReview, Track } from "@/lib/types";
+import { AlbumWithReview, Review, Track } from "@/lib/types";
 import { RatingStars } from "./RatingStars";
-import { X, Heart, Calendar, Disc, Edit3, ListPlus } from "lucide-react";
+import { X, Heart, Calendar, Disc, Edit3, ListPlus, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { TracklistEditorModal } from "./TracklistEditorModal";
 
@@ -13,7 +13,10 @@ interface AlbumDetailModalProps {
   onClose: () => void;
   onOpenRate: (album: AlbumWithReview) => void;
   onAlbumUpdated?: (updatedAlbum: AlbumWithReview) => void;
+  onReviewUpdated?: (updatedReview: Review | null) => void;
+  onRequireAuth?: () => void;
   isAuthenticated?: boolean;
+  userId?: string;
 }
 
 export function AlbumDetailModal({
@@ -22,11 +25,16 @@ export function AlbumDetailModal({
   onClose,
   onOpenRate,
   onAlbumUpdated,
+  onReviewUpdated,
+  onRequireAuth,
   isAuthenticated = false,
+  userId = "00000000-0000-0000-0000-000000000001",
 }: AlbumDetailModalProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoadingTracks, setIsLoadingTracks] = useState<boolean>(false);
   const [isTrackEditorOpen, setIsTrackEditorOpen] = useState<boolean>(false);
+  const [optimisticReview, setOptimisticReview] = useState<Review | null>(null);
+  const [standoutError, setStandoutError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!album) return;
@@ -51,9 +59,95 @@ export function AlbumDetailModal({
 
   if (!isOpen || !album) return null;
 
-  const review = album.review;
-  const isRated = review && review.rating !== null && review.rating > 0;
+  const review =
+    optimisticReview && optimisticReview.album_id === album.id
+      ? optimisticReview
+      : album.review ?? null;
+
+  const isRated = Boolean(review && review.rating !== null && review.rating > 0);
   const isFavorite = review?.is_favorite ?? false;
+  const hasStandouts = Boolean(review?.favorite_tracks && review.favorite_tracks.length > 0);
+  const hasNotes = Boolean(review?.review_text && review.review_text.trim().length > 0);
+  const hasCuratorLog = isRated || hasStandouts || hasNotes || isFavorite;
+
+  const handleToggleTrackStandout = async (trackTitle: string) => {
+    if (!isAuthenticated) {
+      if (onRequireAuth) {
+        onRequireAuth();
+      }
+      return;
+    }
+    if (!album) return;
+
+    setStandoutError(null);
+    const existingFavorites = review?.favorite_tracks || [];
+    const isAlreadyStandout = existingFavorites.some(
+      (fav) => fav.toLowerCase().trim() === trackTitle.toLowerCase().trim()
+    );
+
+    const updatedFavorites = isAlreadyStandout
+      ? existingFavorites.filter(
+          (fav) => fav.toLowerCase().trim() !== trackTitle.toLowerCase().trim()
+        )
+      : [...existingFavorites, trackTitle];
+
+    const todayDate = new Date().toISOString().split("T")[0];
+    const nowIso = new Date().toISOString();
+
+    // Optimistic local state update
+    const previousReview = review;
+    const optimistic: Review = review
+      ? {
+          ...review,
+          favorite_tracks: updatedFavorites,
+          updated_at: nowIso,
+        }
+      : {
+          id: `draft-${album.id}`,
+          user_id: userId,
+          album_id: album.id,
+          rating: null,
+          review_text: null,
+          is_favorite: false,
+          favorite_tracks: updatedFavorites,
+          listened_on: todayDate,
+          created_at: nowIso,
+          updated_at: nowIso,
+        };
+
+    setOptimisticReview(optimistic);
+
+    const supabase = createClient();
+    const reviewPayload = {
+      user_id: userId,
+      album_id: album.id,
+      rating: review?.rating ?? null,
+      is_favorite: review?.is_favorite ?? false,
+      listened_on: review?.listened_on || todayDate,
+      favorite_tracks: updatedFavorites,
+      review_text: review?.review_text || null,
+      updated_at: nowIso,
+    };
+
+    try {
+      const { data, error } = await supabase
+        .from("reviews")
+        .upsert(reviewPayload, { onConflict: "user_id,album_id" })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const savedReview = data as Review;
+      setOptimisticReview(savedReview);
+      onReviewUpdated?.(savedReview);
+    } catch (err: unknown) {
+      console.error("Failed to toggle standout track:", err);
+      setOptimisticReview(previousReview);
+      const msg = err instanceof Error ? err.message : "Failed to update standout track.";
+      setStandoutError(msg);
+    }
+  };
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return "";
@@ -170,15 +264,19 @@ export function AlbumDetailModal({
             </div>
 
             <div className="pt-2.5">
-              {isRated ? (
+              {hasCuratorLog ? (
                 <div className="space-y-2.5">
                   <div className="flex items-center gap-2">
-                    <RatingStars
-                      value={review.rating}
-                      readOnly
-                      size="sm"
-                      showValue
-                    />
+                    {isRated ? (
+                      <RatingStars
+                        value={review!.rating}
+                        readOnly
+                        size="sm"
+                        showValue
+                      />
+                    ) : (
+                      <span className="text-[11px] text-text-muted">Unrated</span>
+                    )}
                     {isFavorite && (
                       <span className="inline-flex items-center gap-1 text-xs text-crimson ml-1">
                         <Heart className="w-3 h-3 fill-crimson" />
@@ -187,23 +285,24 @@ export function AlbumDetailModal({
                     )}
                   </div>
 
-                  {review.favorite_tracks && review.favorite_tracks.length > 0 && (
+                  {hasStandouts && (
                     <div className="flex flex-wrap items-center gap-1 pt-0.5 text-xs">
                       <span className="text-text-muted">Standouts:</span>
-                      {review.favorite_tracks.map((track) => (
+                      {review!.favorite_tracks.map((track) => (
                         <span
                           key={track}
-                          className="px-1.5 py-0.5 rounded bg-surface border border-border text-[11px] text-text-secondary"
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface border border-border text-[11px] text-text-secondary"
                         >
-                          {track}
+                          <Star className="w-2.5 h-2.5 fill-amber text-amber" />
+                          <span>{track}</span>
                         </span>
                       ))}
                     </div>
                   )}
 
-                  {review.review_text && (
+                  {hasNotes && (
                     <p className="text-xs text-text-secondary leading-relaxed pt-1 whitespace-pre-wrap">
-                      {review.review_text}
+                      {review!.review_text}
                     </p>
                   )}
                 </div>
@@ -218,9 +317,16 @@ export function AlbumDetailModal({
           {/* Tracklist Section */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
-              <h3 className="text-xs font-medium text-text-secondary">
-                Tracklist {tracks.length > 0 && `(${tracks.length})`}
-              </h3>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-xs font-medium text-text-secondary">
+                  Tracklist {tracks.length > 0 && `(${tracks.length})`}
+                </h3>
+                {isAuthenticated && tracks.length > 0 && (
+                  <span className="text-[11px] text-text-muted/70 hidden sm:inline">
+                    (Click track to toggle standout)
+                  </span>
+                )}
+              </div>
               {isAuthenticated && (
                 <button
                   type="button"
@@ -233,6 +339,12 @@ export function AlbumDetailModal({
               )}
             </div>
 
+            {standoutError && (
+              <div className="mb-2.5 p-2 rounded bg-crimson/10 border border-crimson/30 text-crimson text-xs">
+                {standoutError}
+              </div>
+            )}
+
             {isLoadingTracks ? (
               <div className="py-3 text-center text-xs text-text-muted">
                 Loading tracks...
@@ -240,38 +352,75 @@ export function AlbumDetailModal({
             ) : tracks.length > 0 ? (
               <div className="divide-y divide-border/30 rounded border border-border/60 bg-surface overflow-hidden">
                 {tracks.map((t) => {
-                  const isStandout = review?.favorite_tracks?.some(
-                    (fav) => fav.toLowerCase().trim() === t.title.toLowerCase().trim()
+                  const isStandout = Boolean(
+                    review?.favorite_tracks?.some(
+                      (fav) => fav.toLowerCase().trim() === t.title.toLowerCase().trim()
+                    )
                   );
 
                   return (
                     <div
                       key={t.id}
-                      className="px-3 py-2 flex items-center justify-between text-xs hover:bg-surface-raised/40 transition-colors"
+                      onClick={() => handleToggleTrackStandout(t.title)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleToggleTrackStandout(t.title);
+                        }
+                      }}
+                      title={
+                        isAuthenticated
+                          ? isStandout
+                            ? `Remove "${t.title}" from standouts`
+                            : `Mark "${t.title}" as standout`
+                          : "Sign in to mark standout tracks"
+                      }
+                      className={`px-3 py-2 flex items-center justify-between text-xs transition-colors group/track select-none cursor-pointer ${
+                        isStandout
+                          ? "bg-amber/10 hover:bg-amber/15 border-l-2 border-l-amber"
+                          : "hover:bg-surface-raised/50"
+                      }`}
                     >
-                      <div className="flex items-center gap-2.5">
-                        <span className="w-4 text-center text-text-muted text-[11px]">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="w-4 text-center text-text-muted text-[11px] shrink-0">
                           {t.track_number}
                         </span>
                         <span
-                          className={`font-medium ${
+                          className={`font-medium truncate ${
                             isStandout ? "text-amber" : "text-text-primary"
                           }`}
                         >
                           {t.title}
                         </span>
                         {isStandout && (
-                          <span className="px-1.5 py-0.2 rounded text-[10px] bg-amber/10 text-amber">
+                          <span className="px-1.5 py-0.2 rounded text-[10px] bg-amber/15 text-amber shrink-0 font-medium border border-amber/30">
                             Pick
                           </span>
                         )}
                       </div>
 
-                      {t.duration_seconds && (
-                        <span className="text-text-muted text-[11px]">
-                          {formatDuration(t.duration_seconds)}
+                      <div className="flex items-center gap-2.5 shrink-0 ml-2">
+                        {t.duration_seconds && (
+                          <span className="text-text-muted text-[11px]">
+                            {formatDuration(t.duration_seconds)}
+                          </span>
+                        )}
+                        <span
+                          className={`p-0.5 rounded transition-colors ${
+                            isStandout
+                              ? "text-amber"
+                              : "text-text-muted/40 group-hover/track:text-amber/80"
+                          }`}
+                        >
+                          <Star
+                            className={`w-3.5 h-3.5 transition-all ${
+                              isStandout ? "fill-amber" : ""
+                            }`}
+                          />
                         </span>
-                      )}
+                      </div>
                     </div>
                   );
                 })}

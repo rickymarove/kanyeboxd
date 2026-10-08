@@ -76,6 +76,22 @@ export function CrateShelfView({
     }));
   }, [albums, reviewsByAlbumId]);
 
+  const currentDetailAlbum = useMemo(() => {
+    if (!selectedAlbumForDetail) return null;
+    return (
+      albumsWithReviews.find((a) => a.id === selectedAlbumForDetail.id) ||
+      selectedAlbumForDetail
+    );
+  }, [selectedAlbumForDetail, albumsWithReviews]);
+
+  const currentRateAlbum = useMemo(() => {
+    if (!selectedAlbumForRate) return null;
+    return (
+      albumsWithReviews.find((a) => a.id === selectedAlbumForRate.id) ||
+      selectedAlbumForRate
+    );
+  }, [selectedAlbumForRate, albumsWithReviews]);
+
   // Compute stats
   const stats: UserStats = useMemo(() => {
     const ratedReviews = reviews.filter((r) => r.rating !== null && r.rating > 0);
@@ -245,7 +261,7 @@ export function CrateShelfView({
 
       {/* Review Modal: only opened when owner triggers */}
       <ReviewModal
-        album={selectedAlbumForRate}
+        album={currentRateAlbum}
         isOpen={!!selectedAlbumForRate && isAuthenticated}
         onClose={() => setSelectedAlbumForRate(null)}
         onSaved={handleReviewSaved}
@@ -254,12 +270,15 @@ export function CrateShelfView({
 
       {/* Liner Notes Detail Modal */}
       <AlbumDetailModal
-        album={selectedAlbumForDetail}
+        album={currentDetailAlbum}
         isOpen={!!selectedAlbumForDetail}
         onClose={() => setSelectedAlbumForDetail(null)}
         onOpenRate={(item) => setSelectedAlbumForRate(item)}
         onAlbumUpdated={handleAlbumUpdated}
+        onReviewUpdated={handleReviewSaved}
+        onRequireAuth={() => setIsAuthModalOpen(true)}
         isAuthenticated={isAuthenticated}
+        userId={defaultUserId}
       />
 
       {/* Add Release Modal */}

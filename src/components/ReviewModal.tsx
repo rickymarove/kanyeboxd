@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { AlbumWithReview, Review } from "@/lib/types";
+import React, { useState, useEffect, useMemo } from "react";
+import { AlbumWithReview, Review, Track } from "@/lib/types";
 import { RatingStars } from "./RatingStars";
 import { DateSelector } from "./DateSelector";
-import { X, Heart, Loader2 } from "lucide-react";
+import { X, Heart, Loader2, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface ReviewModalProps {
@@ -45,8 +45,59 @@ function ReviewFormContent({
   const [reviewText, setReviewText] = useState<string>(
     existingReview?.review_text || ""
   );
+  const [loadedTracks, setLoadedTracks] = useState<Track[]>([]);
+  const tracks =
+    album.tracks && album.tracks.length > 0 ? album.tracks : loadedTracks;
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (album.tracks && album.tracks.length > 0) return;
+
+    let isMounted = true;
+    async function loadTracks() {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("tracks")
+        .select("*")
+        .eq("album_id", album.id)
+        .order("track_number", { ascending: true });
+
+      if (isMounted && !error && data) {
+        setLoadedTracks(data as Track[]);
+      }
+    }
+
+    loadTracks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [album.id, album.tracks]);
+
+  const parsedFavorites = useMemo(() => {
+    return favoriteTracks
+      .split(",")
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+  }, [favoriteTracks]);
+
+  const handleToggleTrack = (trackTitle: string) => {
+    const isSelected = parsedFavorites.some(
+      (t) => t.toLowerCase().trim() === trackTitle.toLowerCase().trim()
+    );
+
+    let updated: string[];
+    if (isSelected) {
+      updated = parsedFavorites.filter(
+        (t) => t.toLowerCase().trim() !== trackTitle.toLowerCase().trim()
+      );
+    } else {
+      updated = [...parsedFavorites, trackTitle];
+    }
+
+    setFavoriteTracks(updated.join(", "));
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,13 +215,60 @@ function ReviewFormContent({
       </div>
 
       {/* Standout Tracks */}
-      <div>
-        <label className="block text-xs font-medium text-text-secondary mb-1.5">
-          Standout Tracks
-        </label>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-medium text-text-secondary">
+            Standout Tracks
+          </label>
+          {tracks.length > 0 && (
+            <span className="text-[11px] text-text-muted">
+              Click tracks to toggle
+            </span>
+          )}
+        </div>
+
+        {tracks.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 p-2 rounded-md bg-canvas/50 border border-border/50 max-h-36 overflow-y-auto">
+            {tracks.map((t) => {
+              const isSelected = parsedFavorites.some(
+                (fav) => fav.toLowerCase().trim() === t.title.toLowerCase().trim()
+              );
+
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => handleToggleTrack(t.title)}
+                  className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors cursor-pointer text-left ${
+                    isSelected
+                      ? "bg-amber/15 border border-amber/40 text-amber font-medium"
+                      : "bg-surface border border-border text-text-secondary hover:text-text-primary hover:border-border-subtle"
+                  }`}
+                >
+                  <Star
+                    className={`w-3 h-3 shrink-0 ${
+                      isSelected ? "fill-amber text-amber" : "text-text-muted/40"
+                    }`}
+                  />
+                  <span>
+                    <span className="text-text-muted text-[11px] mr-1">
+                      {t.track_number}.
+                    </span>
+                    {t.title}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <input
           type="text"
-          placeholder="e.g. Runaway, Devil in a New Dress"
+          placeholder={
+            tracks.length > 0
+              ? "Or edit comma-separated names..."
+              : "e.g. Runaway, Devil in a New Dress"
+          }
           value={favoriteTracks}
           onChange={(e) => setFavoriteTracks(e.target.value)}
           className="w-full h-9 px-3 rounded-md bg-surface border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-border-subtle"
